@@ -8,12 +8,12 @@ package mock_test
 import (
 	"net"
 
-	"github.com/tsuna/gohbase"
-	"github.com/tsuna/gohbase/hrpc"
-	"github.com/tsuna/gohbase/test/mock"
-	regionMock "github.com/tsuna/gohbase/test/mock/region"
-	zkMock "github.com/tsuna/gohbase/test/mock/zk"
-	"github.com/tsuna/gohbase/zk"
+	"github.com/xiaoyanfufu/go-hbase"
+	"github.com/xiaoyanfufu/go-hbase/hrpc"
+	"github.com/xiaoyanfufu/go-hbase/test/mock"
+	regionMock "github.com/xiaoyanfufu/go-hbase/test/mock/region"
+	zkMock "github.com/xiaoyanfufu/go-hbase/test/mock/zk"
+	"github.com/xiaoyanfufu/go-hbase/zk"
 )
 
 var _ gohbase.Client = (*mock.MockClient)(nil)

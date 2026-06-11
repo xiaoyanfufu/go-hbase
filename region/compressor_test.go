@@ -14,7 +14,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/tsuna/gohbase/test"
+	"github.com/xiaoyanfufu/go-hbase/test"
 )
 
 // mockCodec just takes the the source and appends it to destination

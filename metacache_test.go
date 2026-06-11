@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/tsuna/gohbase/hrpc"
-	"github.com/tsuna/gohbase/region"
-	mockRegion "github.com/tsuna/gohbase/test/mock/region"
+	"github.com/xiaoyanfufu/go-hbase/hrpc"
+	"github.com/xiaoyanfufu/go-hbase/region"
+	mockRegion "github.com/xiaoyanfufu/go-hbase/test/mock/region"
 	"go.uber.org/mock/gomock"
 )
 

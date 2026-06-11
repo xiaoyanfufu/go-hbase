@@ -15,12 +15,12 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/tsuna/gohbase/filter"
-	"github.com/tsuna/gohbase/hrpc"
-	"github.com/tsuna/gohbase/pb"
-	"github.com/tsuna/gohbase/region"
-	"github.com/tsuna/gohbase/test"
-	"github.com/tsuna/gohbase/test/mock"
+	"github.com/xiaoyanfufu/go-hbase/filter"
+	"github.com/xiaoyanfufu/go-hbase/hrpc"
+	"github.com/xiaoyanfufu/go-hbase/pb"
+	"github.com/xiaoyanfufu/go-hbase/region"
+	"github.com/xiaoyanfufu/go-hbase/test"
+	"github.com/xiaoyanfufu/go-hbase/test/mock"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/proto"
 )

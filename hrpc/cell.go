@@ -13,7 +13,7 @@ import (
 	"math"
 	"slices"
 
-	"github.com/tsuna/gohbase/pb"
+	"github.com/xiaoyanfufu/go-hbase/pb"
 )
 
 // CellV2 represents a single cell of data.

@@ -14,9 +14,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/tsuna/gohbase/hrpc"
-	"github.com/tsuna/gohbase/pb"
-	"github.com/tsuna/gohbase/test"
+	"github.com/xiaoyanfufu/go-hbase/hrpc"
+	"github.com/xiaoyanfufu/go-hbase/pb"
+	"github.com/xiaoyanfufu/go-hbase/test"
 	"google.golang.org/protobuf/proto"
 )
 

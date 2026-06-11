@@ -10,8 +10,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/tsuna/gohbase/filter"
-	"github.com/tsuna/gohbase/pb"
+	"github.com/xiaoyanfufu/go-hbase/filter"
+	"github.com/xiaoyanfufu/go-hbase/pb"
 )
 
 // baseQuery bundles common fields that can be provided for quering requests: Scans and Gets

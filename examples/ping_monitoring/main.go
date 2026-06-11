@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/tsuna/gohbase/region"
+	"github.com/xiaoyanfufu/go-hbase/region"
 )
 
 func main() {
