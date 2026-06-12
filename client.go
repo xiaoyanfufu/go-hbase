@@ -12,9 +12,12 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
+	krbclient "github.com/jcmturner/gokrb5/v8/client"
+	gohbaseauth "github.com/xiaoyanfufu/go-hbase/auth"
 	"github.com/xiaoyanfufu/go-hbase/compression"
 	"github.com/xiaoyanfufu/go-hbase/hrpc"
 	"github.com/xiaoyanfufu/go-hbase/pb"
@@ -99,6 +102,12 @@ type client struct {
 	// regionReadTimeout is the maximum amount of time to wait for regionserver reply
 	regionReadTimeout time.Duration
 
+	regionAuthType                      byte
+	regionKerberosClient                *krbclient.Client
+	regionKerberosMasterPrincipal       string
+	regionKerberosRegionServerPrincipal string
+	zkSASLTokenProvider                 zk.SASLTokenProvider
+
 	done      chan struct{}
 	closeOnce sync.Once
 
@@ -141,6 +150,7 @@ func newClient(zkquorum string, options ...Option) *client {
 		effectiveUser:       defaultEffectiveUser,
 		regionLookupTimeout: region.DefaultLookupTimeout,
 		regionReadTimeout:   region.DefaultReadTimeout,
+		regionAuthType:      gohbaseauth.HBaseAuthSimple,
 		done:                make(chan struct{}),
 		newRegionClientFn: func(addr string, ctype region.ClientType,
 			options *region.RegionClientOptions) hrpc.RegionClient {
@@ -155,7 +165,7 @@ func newClient(zkquorum string, options ...Option) *client {
 
 	//Have to create the zkClient after the Options have been set
 	//since the zkTimeout could be changed as an option
-	c.zkClient = zk.NewClient(zkquorum, c.zkTimeout, c.zkDialer, c.logger)
+	c.zkClient = zk.NewClient(zkquorum, c.zkTimeout, c.zkDialer, c.logger, zk.WithSASLTokenProvider(c.zkSASLTokenProvider))
 	c.regions = keyRegionCache{
 		logger:  c.logger,
 		regions: b.TreeNew[[]byte, hrpc.RegionInfo](region.Compare),
@@ -275,6 +285,39 @@ func RegionReadTimeout(to time.Duration) Option {
 func EffectiveUser(user string) Option {
 	return func(c *client) {
 		c.effectiveUser = user
+	}
+}
+
+// RegionAuthType configures the HBase RPC authentication type.
+func RegionAuthType(authType string) Option {
+	return func(c *client) {
+		switch strings.ToLower(strings.TrimSpace(authType)) {
+		case "", "simple":
+			c.regionAuthType = gohbaseauth.HBaseAuthSimple
+		case "kerberos", "sasl":
+			c.regionAuthType = gohbaseauth.HBaseAuthSASL
+		}
+	}
+}
+
+// RegionKerberosClient configures the Kerberos client and service principal used by RegionServer/Master RPC.
+func RegionKerberosClient(krbClient *krbclient.Client, servicePrincipal string) Option {
+	return RegionKerberosPrincipals(krbClient, servicePrincipal, servicePrincipal)
+}
+
+// RegionKerberosPrincipals configures the Kerberos client and service principals used by Master and RegionServer RPC.
+func RegionKerberosPrincipals(krbClient *krbclient.Client, masterPrincipal, regionServerPrincipal string) Option {
+	return func(c *client) {
+		c.regionKerberosClient = krbClient
+		c.regionKerberosMasterPrincipal = strings.TrimSpace(masterPrincipal)
+		c.regionKerberosRegionServerPrincipal = strings.TrimSpace(regionServerPrincipal)
+	}
+}
+
+// WithZKSASLTokenProvider configures ZooKeeper SASL authentication.
+func WithZKSASLTokenProvider(provider zk.SASLTokenProvider) Option {
+	return func(c *client) {
+		c.zkSASLTokenProvider = provider
 	}
 }
 

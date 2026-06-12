@@ -16,8 +16,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiaoyanfufu/zk"
 	"github.com/xiaoyanfufu/go-hbase/pb"
+	"github.com/xiaoyanfufu/zk"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -57,33 +57,58 @@ type Client interface {
 	LocateResource(ResourceName) (string, error)
 }
 
+// SASLTokenProvider generates a SASL/GSSAPI token for the ZooKeeper server.
+type SASLTokenProvider = zk.SASLTokenProvider
+
 type client struct {
 	zks            []string
 	sessionTimeout time.Duration
 	dialer         func(ctx context.Context, network, addr string) (net.Conn, error)
+	saslProvider   SASLTokenProvider
 	logger         *slog.Logger
+}
+
+// Option configures the ZooKeeper client.
+type Option func(*client)
+
+// WithSASLTokenProvider configures ZooKeeper SASL authentication.
+func WithSASLTokenProvider(provider SASLTokenProvider) Option {
+	return func(c *client) {
+		c.saslProvider = provider
+	}
 }
 
 // NewClient establishes connection to zookeeper and returns the client
 func NewClient(zkquorum string, st time.Duration,
 	dialer func(ctx context.Context, network, addr string) (net.Conn, error),
-	slogger *slog.Logger) Client {
+	slogger *slog.Logger, options ...Option) Client {
 
-	return &client{
+	c := &client{
 		zks:            strings.Split(zkquorum, ","),
 		sessionTimeout: st,
 		dialer:         dialer,
 		logger:         slogger,
 	}
+	for _, option := range options {
+		option(c)
+	}
+	return c
 }
 
 // LocateResource returns address of the server for the specified resource.
 func (c *client) LocateResource(resource ResourceName) (string, error) {
 	var conn *zk.Conn
 	var err error
-	if c.dialer != nil {
+	switch {
+	case c.dialer != nil && c.saslProvider != nil:
+		conn, _, err = zk.Connect(c.zks, c.sessionTimeout,
+			zk.WithDialer(makeZKDialer(c.dialer)),
+			zk.WithSASLTokenProvider(c.saslProvider))
+	case c.dialer != nil:
 		conn, _, err = zk.Connect(c.zks, c.sessionTimeout, zk.WithDialer(makeZKDialer(c.dialer)))
-	} else {
+	case c.saslProvider != nil:
+		conn, _, err = zk.Connect(c.zks, c.sessionTimeout, zk.WithSASLTokenProvider(c.saslProvider))
+	default:
 		conn, _, err = zk.Connect(c.zks, c.sessionTimeout)
 	}
 	if err != nil {

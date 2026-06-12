@@ -984,26 +984,32 @@ func (c *client) establishRegion(reg hrpc.RegionInfo, addr string) {
 			// master that we don't add to the cache
 			// TODO: consider combining this case with the regular regionserver path
 			options := &region.RegionClientOptions{
-				QueueSize:     c.rpcQueueSize,
-				FlushInterval: c.flushInterval,
-				EffectiveUser: c.effectiveUser,
-				ReadTimeout:   c.regionReadTimeout,
-				Dialer:        c.regionDialer,
-				Logger:        c.logger,
+				QueueSize:                c.rpcQueueSize,
+				FlushInterval:            c.flushInterval,
+				EffectiveUser:            c.effectiveUser,
+				ReadTimeout:              c.regionReadTimeout,
+				Dialer:                   c.regionDialer,
+				AuthType:                 c.regionAuthType,
+				KerberosClient:           c.regionKerberosClient,
+				KerberosServicePrincipal: c.regionKerberosMasterPrincipal,
+				Logger:                   c.logger,
 			}
 			client = c.newRegionClientFn(addr, c.clientType, options)
 		} else {
 			// Build options for regular region client
 			options := &region.RegionClientOptions{
-				QueueSize:            c.rpcQueueSize,
-				FlushInterval:        c.flushInterval,
-				EffectiveUser:        c.effectiveUser,
-				ReadTimeout:          c.regionReadTimeout,
-				Codec:                c.compressionCodec,
-				Dialer:               c.regionDialer,
-				Logger:               c.logger,
-				ScanControl:          c.scanControlOptions,
-				BatchRequestsControl: c.batchRequestsControlOptions,
+				QueueSize:                c.rpcQueueSize,
+				FlushInterval:            c.flushInterval,
+				EffectiveUser:            c.effectiveUser,
+				ReadTimeout:              c.regionReadTimeout,
+				Codec:                    c.compressionCodec,
+				Dialer:                   c.regionDialer,
+				AuthType:                 c.regionAuthType,
+				KerberosClient:           c.regionKerberosClient,
+				KerberosServicePrincipal: c.regionKerberosRegionServerPrincipal,
+				Logger:                   c.logger,
+				ScanControl:              c.scanControlOptions,
+				BatchRequestsControl:     c.batchRequestsControlOptions,
 			}
 
 			client = c.clients.put(addr, reg, func() hrpc.RegionClient {

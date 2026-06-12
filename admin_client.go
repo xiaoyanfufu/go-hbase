@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"time"
 
+	gohbaseauth "github.com/xiaoyanfufu/go-hbase/auth"
 	"github.com/xiaoyanfufu/go-hbase/hrpc"
 	"github.com/xiaoyanfufu/go-hbase/pb"
 	"github.com/xiaoyanfufu/go-hbase/region"
@@ -64,6 +65,7 @@ func newAdminClient(zkquorum string, options ...Option) AdminClient {
 		effectiveUser:       defaultEffectiveUser,
 		regionLookupTimeout: region.DefaultLookupTimeout,
 		regionReadTimeout:   region.DefaultReadTimeout,
+		regionAuthType:      gohbaseauth.HBaseAuthSimple,
 		newRegionClientFn:   region.NewClient,
 		logger:              slog.Default(),
 	}
@@ -71,7 +73,7 @@ func newAdminClient(zkquorum string, options ...Option) AdminClient {
 		option(c)
 	}
 	c.logger.Debug("Creating new admin client.", "Host", slog.StringValue(zkquorum))
-	c.zkClient = zk.NewClient(zkquorum, c.zkTimeout, c.zkDialer, c.logger)
+	c.zkClient = zk.NewClient(zkquorum, c.zkTimeout, c.zkDialer, c.logger, zk.WithSASLTokenProvider(c.zkSASLTokenProvider))
 	return c
 }
 

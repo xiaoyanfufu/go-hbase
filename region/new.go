@@ -14,6 +14,8 @@ import (
 	"net"
 	"time"
 
+	krbclient "github.com/jcmturner/gokrb5/v8/client"
+	gohbaseauth "github.com/xiaoyanfufu/go-hbase/auth"
 	"github.com/xiaoyanfufu/go-hbase/compression"
 	"github.com/xiaoyanfufu/go-hbase/hrpc"
 )
@@ -32,6 +34,12 @@ type RegionClientOptions struct {
 	Codec compression.Codec
 	// Dialer sets a custom dialer for connecting to region servers
 	Dialer func(ctx context.Context, network, addr string) (net.Conn, error)
+	// AuthType is the HBase RPC authentication byte.
+	AuthType byte
+	// KerberosClient is used to perform SASL/GSSAPI authentication when AuthType is SASL.
+	KerberosClient *krbclient.Client
+	// KerberosServicePrincipal is the RegionServer/Master service principal used by SASL.
+	KerberosServicePrincipal string
 	// Logger sets a custom logger
 	Logger *slog.Logger
 	// ScanControl enables congestion control for scan requests
@@ -66,6 +74,7 @@ func NewClient(addr string, ctype ClientType, opts *RegionClientOptions) hrpc.Re
 		rpcQueueSize:  DefaultRPCQueueSize,
 		flushInterval: DefaultFlushInterval,
 		effectiveUser: DefaultEffectiveUser,
+		authType:      gohbaseauth.HBaseAuthSimple,
 		readTimeout:   DefaultReadTimeout,
 		rpcs:          make(chan []hrpc.Call),
 		done:          make(chan struct{}),
@@ -99,6 +108,11 @@ func NewClient(addr string, ctype ClientType, opts *RegionClientOptions) hrpc.Re
 		if opts.Dialer != nil {
 			c.dialer = opts.Dialer
 		}
+		if opts.AuthType != 0 {
+			c.authType = opts.AuthType
+		}
+		c.kerberosClient = opts.KerberosClient
+		c.kerberosServicePrincipal = opts.KerberosServicePrincipal
 		if opts.Logger != nil {
 			c.logger = opts.Logger
 		}
@@ -177,6 +191,21 @@ func (c *client) Dial(ctx context.Context) error {
 		c.connM.Lock()
 		c.conn = conn
 		c.connM.Unlock()
+
+		if c.authType == gohbaseauth.HBaseAuthSASL {
+			if c.kerberosClient == nil {
+				c.fail(fmt.Errorf("missing Kerberos client for RegionServer SASL"))
+				return
+			}
+			if c.kerberosServicePrincipal == "" {
+				c.fail(fmt.Errorf("missing Kerberos service principal for RegionServer SASL"))
+				return
+			}
+			if err := gohbaseauth.PerformRegionServerSASLHandshake(ctx, conn, c.kerberosClient, c.kerberosServicePrincipal); err != nil {
+				c.fail(fmt.Errorf("failed RegionServer SASL handshake: %s", err))
+				return
+			}
+		}
 
 		// time out send hello if it take long
 		if deadline, ok := ctx.Deadline(); ok {

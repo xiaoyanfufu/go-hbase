@@ -22,6 +22,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	krbclient "github.com/jcmturner/gokrb5/v8/client"
+	gohbaseauth "github.com/xiaoyanfufu/go-hbase/auth"
 	"github.com/xiaoyanfufu/go-hbase/hrpc"
 	"github.com/xiaoyanfufu/go-hbase/pb"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -191,6 +193,10 @@ type client struct {
 	rpcQueueSize  int
 	flushInterval time.Duration
 	effectiveUser string
+	authType      byte
+
+	kerberosClient           *krbclient.Client
+	kerberosServicePrincipal string
 
 	// readTimeout is the maximum amount of time to wait for regionserver reply
 	readTimeout time.Duration
@@ -693,11 +699,19 @@ func (c *client) sendHello() error {
 		return fmt.Errorf("failed to marshal connection header: %s", err)
 	}
 
-	const header = "HBas\x00\x50" // \x50 = Simple Auth.
-	buf := make([]byte, 0, len(header)+4+len(data))
-	buf = append(buf, header...)
-	buf = buf[:len(header)+4]
-	binary.BigEndian.PutUint32(buf[6:], uint32(len(data)))
+	authType := c.authType
+	if authType == 0 {
+		authType = gohbaseauth.HBaseAuthSimple
+	}
+	prefixLen := 0
+	if authType != gohbaseauth.HBaseAuthSASL {
+		prefixLen = 6
+	}
+	buf := make([]byte, prefixLen+4, prefixLen+4+len(data))
+	if prefixLen > 0 {
+		copy(buf, []byte{'H', 'B', 'a', 's', 0x00, authType})
+	}
+	binary.BigEndian.PutUint32(buf[prefixLen:], uint32(len(data)))
 	buf = append(buf, data...)
 	return c.write(buf)
 }
