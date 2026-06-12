@@ -92,7 +92,8 @@ type client struct {
 	flushInterval time.Duration
 
 	// The user used when accessing regions.
-	effectiveUser string
+	effectiveUser    string
+	effectiveUserSet bool
 
 	// How long to wait for a region lookup (either meta lookup or finding
 	// meta in ZooKeeper).  Should be greater than or equal to the ZooKeeper
@@ -285,6 +286,7 @@ func RegionReadTimeout(to time.Duration) Option {
 func EffectiveUser(user string) Option {
 	return func(c *client) {
 		c.effectiveUser = user
+		c.effectiveUserSet = true
 	}
 }
 

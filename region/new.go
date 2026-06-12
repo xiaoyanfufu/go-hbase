@@ -28,6 +28,8 @@ type RegionClientOptions struct {
 	FlushInterval time.Duration
 	// EffectiveUser sets the effective user for the connection
 	EffectiveUser string
+	// EffectiveUserSet allows callers to explicitly set an empty effective user.
+	EffectiveUserSet bool
 	// ReadTimeout sets the read timeout for RPCs
 	ReadTimeout time.Duration
 	// Codec sets the compression codec for cellblocks
@@ -96,7 +98,7 @@ func NewClient(addr string, ctype ClientType, opts *RegionClientOptions) hrpc.Re
 		if opts.FlushInterval > 0 {
 			c.flushInterval = opts.FlushInterval
 		}
-		if opts.EffectiveUser != "" {
+		if opts.EffectiveUserSet || opts.EffectiveUser != "" {
 			c.effectiveUser = opts.EffectiveUser
 		}
 		if opts.ReadTimeout > 0 {
