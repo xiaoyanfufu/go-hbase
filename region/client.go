@@ -589,6 +589,12 @@ func (c *client) receive(r io.Reader) (err error) {
 	callID := *header.CallId
 	rpc := c.unregisterRPC(callID)
 	if rpc == nil {
+		if header.Exception != nil {
+			return ServerError{exceptionToError(
+				header.Exception.GetExceptionClassName(),
+				header.Exception.GetStackTrace(),
+			)}
+		}
 		return ServerError{fmt.Errorf("got a response with an unexpected call ID: %d", callID)}
 	}
 
@@ -616,7 +622,10 @@ func (c *client) receive(r io.Reader) (err error) {
 	}()
 
 	if header.Exception != nil {
-		err = exceptionToError(*header.Exception.ExceptionClassName, *header.Exception.StackTrace)
+		err = exceptionToError(
+			header.Exception.GetExceptionClassName(),
+			header.Exception.GetStackTrace(),
+		)
 		return
 	}
 
