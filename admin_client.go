@@ -37,6 +37,8 @@ type AdminClient interface {
 	RestoreSnapshot(t *hrpc.Snapshot) error
 	ClusterStatus() (*pb.ClusterStatus, error)
 	ListTableNames(t *hrpc.ListTableNames) ([]*pb.TableName, error)
+	ListNamespaceDescriptors(t *hrpc.ListNamespaceDescriptors) ([]*pb.NamespaceDescriptor, error)
+	ListTableNamesByNamespace(t *hrpc.ListTableNamesByNamespace) ([]*pb.TableName, error)
 	// SetBalancer sets balancer state and returns previous state
 	SetBalancer(sb *hrpc.SetBalancer) (bool, error)
 	// MoveRegion moves a region to a different RegionServer
@@ -276,6 +278,32 @@ func (c *client) ListTableNames(t *hrpc.ListTableNames) ([]*pb.TableName, error)
 		return nil, errors.New("sendPRC returned not a GetTableNamesResponse")
 	}
 	return res.GetTableNames(), nil
+}
+
+func (c *client) ListNamespaceDescriptors(t *hrpc.ListNamespaceDescriptors) ([]*pb.NamespaceDescriptor, error) {
+	pbmsg, err := c.SendRPC(t)
+	if err != nil {
+		return nil, err
+	}
+
+	res, ok := pbmsg.(*pb.ListNamespaceDescriptorsResponse)
+	if !ok {
+		return nil, errors.New("sendPRC returned not a ListNamespaceDescriptorsResponse")
+	}
+	return res.GetNamespaceDescriptor(), nil
+}
+
+func (c *client) ListTableNamesByNamespace(t *hrpc.ListTableNamesByNamespace) ([]*pb.TableName, error) {
+	pbmsg, err := c.SendRPC(t)
+	if err != nil {
+		return nil, err
+	}
+
+	res, ok := pbmsg.(*pb.ListTableNamesByNamespaceResponse)
+	if !ok {
+		return nil, errors.New("sendPRC returned not a ListTableNamesByNamespaceResponse")
+	}
+	return res.GetTableName(), nil
 }
 
 func (c *client) SetBalancer(sb *hrpc.SetBalancer) (bool, error) {

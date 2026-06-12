@@ -226,6 +226,36 @@ func (mr *MockAdminClientMockRecorder) ListTableNames(arg0 any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTableNames", reflect.TypeOf((*MockAdminClient)(nil).ListTableNames), arg0)
 }
 
+// ListNamespaceDescriptors mocks base method.
+func (m *MockAdminClient) ListNamespaceDescriptors(arg0 *hrpc.ListNamespaceDescriptors) ([]*pb.NamespaceDescriptor, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListNamespaceDescriptors", arg0)
+	ret0, _ := ret[0].([]*pb.NamespaceDescriptor)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListNamespaceDescriptors indicates an expected call of ListNamespaceDescriptors.
+func (mr *MockAdminClientMockRecorder) ListNamespaceDescriptors(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNamespaceDescriptors", reflect.TypeOf((*MockAdminClient)(nil).ListNamespaceDescriptors), arg0)
+}
+
+// ListTableNamesByNamespace mocks base method.
+func (m *MockAdminClient) ListTableNamesByNamespace(arg0 *hrpc.ListTableNamesByNamespace) ([]*pb.TableName, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTableNamesByNamespace", arg0)
+	ret0, _ := ret[0].([]*pb.TableName)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListTableNamesByNamespace indicates an expected call of ListTableNamesByNamespace.
+func (mr *MockAdminClientMockRecorder) ListTableNamesByNamespace(arg0 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTableNamesByNamespace", reflect.TypeOf((*MockAdminClient)(nil).ListTableNamesByNamespace), arg0)
+}
+
 // MoveRegion mocks base method.
 func (m *MockAdminClient) MoveRegion(arg0 *hrpc.MoveRegion) error {
 	m.ctrl.T.Helper()
